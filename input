@@ -6,7 +6,6 @@ atom_style	atomic
 
 
 #########2
-
 lattice		fcc 2.7  
 region		Sto7i block 0 10 0 10 0 10
 create_box	1 Sto7i
@@ -17,13 +16,11 @@ create_atoms	1 region Sto7i
 
 pair_style	eam/alloy
 pair_coeff	* * pot Al 
-
-#...
 timestep	0.002
 
 
-#########3
-thermo 		50
+#########Relaxation
+thermo 		1000
 thermo_style	custom step temp
 
 fix 		q all box/relax iso 0.0 vmax 0.001
@@ -31,36 +28,48 @@ min_style	cg
 minimize	0.0 5.0e-3 1000000 1000000
 unfix 		q
 
-
 reset_timestep	0
-
+############### FIX 1
 velocity	all create 600 939392 rot yes mom yes
 
 fix 		1 all npt temp 300 300 0.1 iso 0 0 0.1
 
-dump		1 all custom 50 1.lmp id type x y z vx vy vz
-dump_modify	1 sort id 
-
+dump		1 all custom 1000 1.lmp id type x y z vx vy vz
+dump_modify	1 sort id append yes
 run 		2000
-
 unfix		1
-#undump		1
-thermo		50
+undump		1
+thermo		1000
 thermo_style	custom step temp 
-
+#######rdf1
+compute 	rdf1 all rdf 100
+fix		41 all ave/time 10 1000 20000 c_rdf1[1] file Al1.txt mode vector
+run 		21000
+unfix 		41
+#####################
 fix 		2 all npt temp 300 3000 1 iso 0 0 1
-dump 		2 all custom 50 1.lmp id type x y z vx vy vz 
-dump_modify	2 sort id 
+dump 		2 all custom 1000 1.lmp id type x y z vx vy vz 
+dump_modify	2 sort id append yes
 run 		12000
 unfix		2
-
-thermo 		50 
+#undump		2
+thermo 		1000 
 thermo_style	custom step temp 
+###################
 
 fix 		3 all nvt temp 3000 3000 1
-dump 		3 all custom 50 1.lmp 1d type x y z vx vy vz
-dump_modify	3 sort id 
-run 		1000
+dump 		3 all custom 1000 1.lmp id type x y z vx vy vz
+dump_modify	3 sort id append yes
+run 		100000
+unfix		3
+undump		3
+##############   rdf2
+compute 	rdf2 all rdf 100
+fix		42 all ave/time 10 1000 20000 c_rdf2[1] file Al2.txt mode vector
+run 		21000
+unfix 		42
+
+##############
 
 
 
